@@ -1,1 +1,1 @@
-# mlx_basic_movement
+# mlx_bouncing_block
