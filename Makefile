@@ -1,38 +1,67 @@
-NAME = bouncing
-CC = cc
-# CFLAGS = -Wall -Wextra -Werror
-HEADER = ./src/stuff.h
-CFLAGS ?=
-MLXLIB = libmlx42.a
-MLXFLAGS = -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit
+SHELL := /bin/bash
 
-SRC = $(shell find ./src -iname "*.c")
-OBJ = $(SRC:./src/%.c=./obj/%.o)
-OBJDIR = obj
+NAME := bounce
 
-all: $(NAME)
+SRC_FILES	:=	dvdbounce.c
 
-$(OBJDIR):
-	mkdir $(OBJDIR)
+SRC_DIR := src
+OBJ_DIR := obj
+INC_DIR := include
+MLX_DIR := MLX42
 
-$(MLXLIB):
-	cd ./MLX42 && cmake -B build && make -C build -j4
-	cd ./MLX42/build && cp libmlx42.a ../../
+OBJ_FILES := $(addprefix $(OBJ_DIR)/, $(SRC_FILES:.c=.o))
+DEP_FILES := $(OBJ_FILES:.o=.d)
 
-$(OBJDIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) -c $(CFLAGS) -o $@ $^
+# SRC_SUBD = $(shell find $(SRC_DIR) -type d)
+# OBJ_SUBD = $(subst $(SRC_DIR), $(OBJ_DIR), $(SRCSUBD))
 
-$(NAME): $(MLXLIB) $(OBJDIR) $(OBJ)
-	$(CC) $(CFLAGS) $(MLXFLAGS) $(MLXLIB) $(OBJ) -o $(NAME)
+MLX42 := $(MLX_DIR)/build/libmlx42.a
+
+LIBFT_DIR := libft
+LIBFT := libft/libft.a
+
+CC  := cc
+IFLAGS := -I$(INC_DIR) -I$(MLX_DIR)/include -I$(MLX_DIR)/include/$(MLX_DIR) -I$(LIBFT_DIR)
+CFLAGS := -Wall -Wextra -Werror -MMD -MP -g
+LFLAGS := -L$(MLX_DIR)/build -lmlx42 -lglfw -ldl -pthread -lm -L$(LIBFT_DIR) -lft
+
+_DEBUG := 1
+ifeq ($(_DEBUG),1)
+	LFLAGS += -g3 -fsanitize=address
+endif
+
+all: $(MLX42) $(LIBFT) $(NAME)
+
+$(LIBFT):
+	@$(MAKE) -C $(LIBFT_DIR) --quiet
+
+$(MLX42):
+	git submodule update --init
+	@cmake $(MLX_DIR) -B $(MLX_DIR)/build
+	$(MAKE) -C $(MLX_DIR)/build -j4 --quiet
+
+$(NAME): $(OBJ_FILES)
+	$(CC) $^ -o $@ $(LFLAGS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(IFLAGS) -c $< -o $@
+
+-include $(DEP_FILES)
 
 clean:
-	rm -rf $(OBJDIR)
+	@$(MAKE) clean -C $(MLX_DIR)/build -j4 --quiet
+	@$(MAKE) clean -C $(LIBFT_DIR) --quiet
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	cd ./MLX42 && rm -rf build
-	rm -rf $(MLXLIB)
-	rm -rf $(NAME)
+	$(MAKE) clean/fast -C $(MLX_DIR)/build -j4 --quiet
+	$(MAKE) fclean -C $(LIBFT_DIR) --quiet
+	-rm -f $(NAME)
 
 re: fclean all
 
-.PHONY: all clean fclean re
+test: all
+	./test.sh
+
+.PHONY: all, clean, fclean, re
