@@ -1,7 +1,7 @@
 #include "stuff.h"
 
-#define WIDTH 2560
-#define HEIGHT 1440
+#define WIDTH 400
+#define HEIGHT 300
 
 #define BLOCKWIDTH 180
 #define BLOCKHEIGHT 100
@@ -13,8 +13,8 @@ int32_t g_color = 0;
 int32_t b_color = 255;
 int32_t a_color = 255;
 
-uint32_t xdirection = 4;
-uint32_t ydirection = 4;
+uint32_t xdirection = 16;
+uint32_t ydirection = 16;
 
 uint32_t color_counter = 0;
 
@@ -70,22 +70,22 @@ void bounce(void* param)
 	if (image->instances[0].y >= HEIGHT - BLOCKHEIGHT)
 	{
 		update_color();
-		ydirection = -4;
+		ydirection = -16;
 	}
 	if (image->instances[0].x >= WIDTH - BLOCKWIDTH)
 	{
 		update_color();
-		xdirection = -4;
+		xdirection = -16;
 	}
 	if (image->instances[0].x <= 0)
 	{
 		update_color();
-		xdirection = 4;
+		xdirection = 16;
 	}
 	if (image->instances[0].y <= 0)
 	{
 		update_color();
-		ydirection = 4;
+		ydirection = 16;
 	}
 }
 
